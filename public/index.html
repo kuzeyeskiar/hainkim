@@ -962,7 +962,6 @@ function renderList(list, tagClass, tagText, mixed) {
         <div class="row-name">${user.displayName}</div>
         <div class="row-handle">@${user.username}</div>
       </div>
-      <div class="row-films">${user.films.toLocaleString('tr-TR')} film</div>
       ${tc ? `<div class="row-tag ${tc}">${tt}</div>` : ''}
       <a class="row-link" href="https://letterboxd.com/${user.username}" target="_blank" title="Letterboxd'da aç">↗</a>
     `;
