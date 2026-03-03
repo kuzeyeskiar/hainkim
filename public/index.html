@@ -1,961 +1,1095 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hainkim? — Letterboxd Karşılıksız Takip</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inconsolata:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #1a1a1a;
-  --paper: #222222;
-  --card: #2a2a2a;
-  --border: #333333;
-  --border2: #444444;
-  --gold: #ff8000;
-  --gold2: #ff9a2e;
-  --red: #e05c5c;
-  --green: #40bcb4;
-  --text: #ffffff;
-  --muted: #8c8c8c;
-  --dim: #555555;
-  --film: #111111;
-  --lb-green: #40bcb4;
-}
-
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inconsolata', monospace;
-  min-height: 100vh;
-  cursor: default;
-}
-
-/* Film strip top border */
-.filmstrip {
-  height: 28px;
-  background: var(--film);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 0;
-  overflow: hidden;
-  position: relative;
-}
-
-.filmstrip::before, .filmstrip::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  width: 100%;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 16px,
-    var(--border2) 16px,
-    var(--border2) 18px,
-    transparent 18px,
-    transparent 34px
-  );
-  left: 0;
-}
-
-.filmstrip::after {
-  top: auto;
-}
-
-/* HEADER */
-header {
-  padding: 48px 64px 40px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  overflow: hidden;
-}
-
-header::before {
-  content: 'HAİNKİM?';
-  position: absolute;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 200px;
-  background: linear-gradient(90deg, rgba(255,128,0,0.07) 0%, rgba(64,188,180,0.05) 55%, rgba(255,128,0,0.03) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -2px;
-  bottom: -20px;
-  left: -6px;
-  top: auto;
-  pointer-events: none;
-  line-height: 1;
-  user-select: none;
-}
-
-.logo-area h1 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 64px;
-  letter-spacing: 3px;
-  color: #ffffff;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.logo-area h1 em {
-  color: var(--lb-green);
-  font-style: normal;
-}
-
-
-
-.logo-area p {
-  font-family: 'Lora', serif;
-  font-style: italic;
-  font-size: 14px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-}
-
-.header-stat {
-  text-align: right;
-  font-size: 12px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-  line-height: 2;
-  font-family: 'Lora', serif;
-  font-style: italic;
-}
-
-/* MAIN */
-main {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 56px 24px 80px;
-}
-
-/* SEARCH */
-.search-block {
-  margin-bottom: 48px;
-}
-
-.search-eyebrow {
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-eyebrow::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.search-box {
-  display: flex;
-  border: 1px solid var(--border);
-  background: var(--paper);
-  transition: border-color 0.2s;
-}
-
-.search-box:focus-within {
-  border-color: var(--gold);
-}
-
-.search-at {
-  padding: 0 18px;
-  display: flex;
-  align-items: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  color: var(--gold);
-  border-right: 1px solid var(--border);
-  background: var(--card);
-  letter-spacing: 1px;
-}
-
-.search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-family: 'Inconsolata', monospace;
-  font-size: 18px;
-  font-weight: 500;
-  padding: 18px 20px;
-  letter-spacing: 0.5px;
-}
-
-.search-input::placeholder {
-  color: var(--dim);
-  font-weight: 300;
-}
-
-.search-btn {
-  background: var(--gold);
-  color: var(--bg);
-  border: none;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  padding: 0 36px;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-
-.search-btn:hover { background: var(--gold2); }
-.search-btn:active { background: var(--gold); transform: scale(0.99); }
-.search-btn:disabled { background: var(--dim); cursor: not-allowed; }
-
-/* LOADING */
-.loader {
-  display: none;
-  padding: 40px 0;
-  text-align: center;
-}
-
-.loader.visible { display: block; }
-
-.film-roll {
-  display: inline-flex;
-  gap: 3px;
-  margin-bottom: 20px;
-}
-
-.film-frame {
-  width: 18px;
-  height: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  animation: filmLoad 0.8s ease-in-out infinite;
-  border-radius: 1px;
-}
-
-.film-frame:nth-child(1) { animation-delay: 0s; }
-.film-frame:nth-child(2) { animation-delay: 0.1s; }
-.film-frame:nth-child(3) { animation-delay: 0.2s; }
-.film-frame:nth-child(4) { animation-delay: 0.3s; }
-.film-frame:nth-child(5) { animation-delay: 0.4s; }
-.film-frame:nth-child(6) { animation-delay: 0.5s; }
-
-@keyframes filmLoad {
-  0%, 100% { background: var(--card); border-color: var(--border); }
-  50% { background: var(--gold); border-color: var(--gold2); }
-}
-
-.loader-text {
-  font-family: 'Lora', serif;
-  font-style: italic;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.loader-sub {
-  font-size: 11px;
-  color: var(--dim);
-  margin-top: 6px;
-  letter-spacing: 1px;
-}
-
-/* PROFILE CARD */
-.profile-card {
-  display: none;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  padding: 24px 28px;
-  margin-bottom: 40px;
-  position: relative;
-  overflow: hidden;
-}
-
-.profile-card.visible { display: flex; gap: 32px; align-items: center; }
-
-.profile-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
-}
-
-.profile-avatar {
-  width: 56px;
-  height: 56px;
-  background: var(--card);
-  border: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  color: var(--gold);
-  flex-shrink: 0;
-}
-
-.profile-info { flex: 1; }
-
-.profile-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  letter-spacing: 1px;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.profile-handle {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.profile-stats {
-  display: flex;
-  gap: 28px;
-  text-align: center;
-}
-
-.pstat-num {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  letter-spacing: 1px;
-  display: block;
-  color: var(--text);
-}
-
-.pstat-label {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* RESULTS */
-.results { display: none; }
-.results.visible { display: block; }
-
-.results-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.results-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 32px;
-  letter-spacing: 2px;
-}
-
-.results-title span {
-  color: var(--gold);
-}
-
-.results-meta {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 1px;
-}
-
-/* FILTER TABS */
-.filter-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  font-family: 'Inconsolata', monospace;
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 7px 16px;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.filter-btn:hover {
-  border-color: var(--border2);
-  color: var(--text);
-}
-
-.filter-btn.active {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--bg);
-}
-
-/* USER LIST */
-.user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.user-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  background: var(--paper);
-  border: 1px solid transparent;
-  transition: border-color 0.15s, background 0.15s;
-  animation: rowIn 0.25s ease forwards;
-  opacity: 0;
-  transform: translateX(-6px);
-}
-
-@keyframes rowIn {
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.user-row:hover {
-  background: var(--card);
-  border-color: var(--border);
-}
-
-.row-num {
-  font-size: 11px;
-  color: var(--dim);
-  width: 24px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.row-avatar {
-  width: 36px;
-  height: 36px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 17px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-
-.row-info { flex: 1; min-width: 0; }
-
-.row-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.row-handle {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-.row-films {
-  font-size: 11px;
-  color: var(--dim);
-  text-align: right;
-  white-space: nowrap;
-}
-
-.row-tag {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 1px;
-  white-space: nowrap;
-}
-
-.tag-noback {
-  background: rgba(201, 76, 76, 0.12);
-  color: var(--red);
-  border: 1px solid rgba(201, 76, 76, 0.25);
-}
-
-.tag-mutual {
-  background: rgba(76, 173, 122, 0.1);
-  color: var(--green);
-  border: 1px solid rgba(76, 173, 122, 0.2);
-}
-
-.tag-notfollowing {
-  background: rgba(201, 168, 76, 0.1);
-  color: var(--gold);
-  border: 1px solid rgba(201, 168, 76, 0.2);
-}
-
-.row-link {
-  color: var(--dim);
-  text-decoration: none;
-  font-size: 13px;
-  transition: color 0.15s;
-  flex-shrink: 0;
-}
-
-.row-link:hover { color: var(--gold); }
-
-/* SUMMARY STRIP */
-.summary-strip {
-  display: none;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  margin-bottom: 32px;
-}
-
-.summary-strip.visible { display: grid; }
-
-.summary-cell {
-  background: var(--paper);
-  border: 1px solid var(--border);
-  padding: 20px;
-  text-align: center;
-}
-
-.summary-num {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 44px;
-  letter-spacing: 2px;
-  display: block;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.summary-label {
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.num-red { color: var(--red); }
-.num-green { color: var(--green); }
-.num-gold { color: var(--gold); }
-
-/* EMPTY STATE */
-.empty {
-  display: none;
-  padding: 64px;
-  text-align: center;
-  border: 1px dashed var(--border);
-}
-
-.empty.visible { display: block; }
-
-.empty-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.empty-text {
-  font-family: 'Lora', serif;
-  font-style: italic;
-  font-size: 14px;
-  color: var(--dim);
-}
-
-/* ERROR */
-.error-msg {
-  display: none;
-  background: rgba(201, 76, 76, 0.08);
-  border: 1px solid rgba(201, 76, 76, 0.2);
-  padding: 16px 20px;
-  color: var(--red);
-  font-size: 13px;
-  margin-bottom: 24px;
-}
-
-.error-msg.visible { display: block; }
-
-/* FOOTER */
-footer {
-  border-top: 1px solid var(--border);
-  padding: 24px 64px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.footer-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  color: var(--dim);
-}
-
-.footer-note {
-  font-size: 10px;
-  color: var(--dim);
-  letter-spacing: 0.5px;
-  max-width: 380px;
-  text-align: right;
-  line-height: 1.8;
-}
-
-/* CREDIT BAR */
-.credit-bar {
-  background: var(--film);
-  border-top: 1px solid var(--border);
-  padding: 12px 64px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.credit-tag {
-  font-family: 'Inconsolata', monospace;
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--lb-green);
-  text-decoration: none;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.credit-tag:hover { opacity: 1; }
-
-
-  height: 28px;
-  background: var(--film);
-  border-top: 1px solid var(--border);
-}
-
-@media (max-width: 640px) {
-  header { padding: 32px 20px 28px; grid-template-columns: 1fr; gap: 16px; }
-  header::before { font-size: 100px; }
-  .logo-area h1 { font-size: 48px; }
-  main { padding: 36px 16px 60px; }
-  .profile-card.visible { flex-direction: column; gap: 16px; }
-  .profile-stats { justify-content: center; }
-  .summary-strip.visible { grid-template-columns: repeat(3, 1fr); }
-  footer { flex-direction: column; gap: 12px; padding: 20px; text-align: center; }
-  .footer-note { text-align: center; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hainkim? — Letterboxd Karşılıksız Takip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inconsolata:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1a1a1a;
+      --paper: #222222;
+      --card: #2a2a2a;
+      --border: #333333;
+      --border2: #444444;
+      --gold: #ff8000;
+      --gold2: #ff9a2e;
+      --red: #e05c5c;
+      --green: #40bcb4;
+      --text: #ffffff;
+      --muted: #8c8c8c;
+      --dim: #555555;
+      --film: #111111;
+      --lb-green: #40bcb4;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inconsolata', monospace;
+      min-height: 100vh;
+      cursor: default;
+    }
+
+    /* Film strip top border */
+    .filmstrip {
+      height: 28px;
+      background: var(--film);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .filmstrip::before,
+    .filmstrip::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      width: 100%;
+      background-image: repeating-linear-gradient(90deg,
+          transparent 0px,
+          transparent 16px,
+          var(--border2) 16px,
+          var(--border2) 18px,
+          transparent 18px,
+          transparent 34px);
+      left: 0;
+    }
+
+    .filmstrip::after {
+      top: auto;
+    }
+
+    /* HEADER */
+    header {
+      padding: 48px 64px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: 'HAİNKİM?';
+      position: absolute;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 200px;
+      background: linear-gradient(90deg, rgba(255, 128, 0, 0.07) 0%, rgba(64, 188, 180, 0.05) 55%, rgba(255, 128, 0, 0.03) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -2px;
+      bottom: -20px;
+      left: -6px;
+      top: auto;
+      pointer-events: none;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .logo-area h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      letter-spacing: 3px;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .logo-area h1 em {
+      color: var(--lb-green);
+      font-style: normal;
+    }
+
+
+
+    .logo-area p {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    .header-stat {
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      line-height: 2;
+      font-family: 'Lora', serif;
+      font-style: italic;
+    }
+
+    /* MAIN */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    /* SEARCH */
+    .search-block {
+      margin-bottom: 48px;
+    }
+
+    .search-eyebrow {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .search-box {
+      display: flex;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--gold);
+    }
+
+    .search-at {
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      color: var(--gold);
+      border-right: 1px solid var(--border);
+      background: var(--card);
+      letter-spacing: 1px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'Inconsolata', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      padding: 18px 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .search-input::placeholder {
+      color: var(--dim);
+      font-weight: 300;
+    }
+
+    .search-btn {
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      padding: 0 36px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover {
+      background: var(--gold2);
+    }
+
+    .search-btn:active {
+      background: var(--gold);
+      transform: scale(0.99);
+    }
+
+    .search-btn:disabled {
+      background: var(--dim);
+      cursor: not-allowed;
+    }
+
+    /* LOADING */
+    .loader {
+      display: none;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .loader.visible {
+      display: block;
+    }
+
+    .film-roll {
+      display: inline-flex;
+      gap: 3px;
+      margin-bottom: 20px;
+    }
+
+    .film-frame {
+      width: 18px;
+      height: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      animation: filmLoad 0.8s ease-in-out infinite;
+      border-radius: 1px;
+    }
+
+    .film-frame:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .film-frame:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .film-frame:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .film-frame:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    .film-frame:nth-child(5) {
+      animation-delay: 0.4s;
+    }
+
+    .film-frame:nth-child(6) {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes filmLoad {
+
+      0%,
+      100% {
+        background: var(--card);
+        border-color: var(--border);
+      }
+
+      50% {
+        background: var(--gold);
+        border-color: var(--gold2);
+      }
+    }
+
+    .loader-text {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .loader-sub {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    /* PROFILE CARD */
+    .profile-card {
+      display: none;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      padding: 24px 28px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card.visible {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      background: var(--card);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .profile-handle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 28px;
+      text-align: center;
+    }
+
+    .pstat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1px;
+      display: block;
+      color: var(--text);
+    }
+
+    .pstat-label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* RESULTS */
+    .results {
+      display: none;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 2px;
+    }
+
+    .results-title span {
+      color: var(--gold);
+    }
+
+    .results-meta {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* FILTER TABS */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--bg);
+    }
+
+    /* USER LIST */
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+      animation: rowIn 0.25s ease forwards;
+      opacity: 0;
+      transform: translateX(-6px);
+    }
+
+    @keyframes rowIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .user-row:hover {
+      background: var(--card);
+      border-color: var(--border);
+    }
+
+    .row-num {
+      font-size: 11px;
+      color: var(--dim);
+      width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .row-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 17px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .row-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .row-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row-handle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .row-films {
+      font-size: 11px;
+      color: var(--dim);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .row-tag {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 1px;
+      white-space: nowrap;
+    }
+
+    .tag-noback {
+      background: rgba(201, 76, 76, 0.12);
+      color: var(--red);
+      border: 1px solid rgba(201, 76, 76, 0.25);
+    }
+
+    .tag-mutual {
+      background: rgba(76, 173, 122, 0.1);
+      color: var(--green);
+      border: 1px solid rgba(76, 173, 122, 0.2);
+    }
+
+    .tag-notfollowing {
+      background: rgba(201, 168, 76, 0.1);
+      color: var(--gold);
+      border: 1px solid rgba(201, 168, 76, 0.2);
+    }
+
+    .row-link {
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .row-link:hover {
+      color: var(--gold);
+    }
+
+    .row-unfollow {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid rgba(201, 76, 76, 0.35);
+      color: var(--red);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .row-unfollow:hover {
+      background: rgba(201, 76, 76, 0.15);
+      border-color: var(--red);
+      color: #ff7070;
+    }
+
+    /* SUMMARY STRIP */
+    .summary-strip {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-bottom: 32px;
+    }
+
+    .summary-strip.visible {
+      display: grid;
+    }
+
+    .summary-cell {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .summary-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 44px;
+      letter-spacing: 2px;
+      display: block;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .summary-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .num-red {
+      color: var(--red);
+    }
+
+    .num-green {
+      color: var(--green);
+    }
+
+    .num-gold {
+      color: var(--gold);
+    }
+
+    /* EMPTY STATE */
+    .empty {
+      display: none;
+      padding: 64px;
+      text-align: center;
+      border: 1px dashed var(--border);
+    }
+
+    .empty.visible {
+      display: block;
+    }
+
+    .empty-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--dim);
+    }
+
+    /* ERROR */
+    .error-msg {
+      display: none;
+      background: rgba(201, 76, 76, 0.08);
+      border: 1px solid rgba(201, 76, 76, 0.2);
+      padding: 16px 20px;
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--dim);
+    }
+
+    .footer-note {
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.5px;
+      max-width: 380px;
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    /* CREDIT BAR */
+    .credit-bar {
+      background: var(--film);
+      border-top: 1px solid var(--border);
+      padding: 12px 64px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .credit-tag {
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--lb-green);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .credit-tag:hover {
+      opacity: 1;
+    }
+
+
+    height: 28px;
+    background: var(--film);
+    border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 32px 20px 28px;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      header::before {
+        font-size: 100px;
+      }
+
+      .logo-area h1 {
+        font-size: 48px;
+      }
+
+      main {
+        padding: 36px 16px 60px;
+      }
+
+      .profile-card.visible {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .profile-stats {
+        justify-content: center;
+      }
+
+      .summary-strip.visible {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .footer-note {
+        text-align: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="filmstrip"></div>
+  <div class="filmstrip"></div>
 
-<header>
-  <div class="logo-area">
-    <h1>HAİN<em>KİM?</em></h1>
-    <p>Seni takip etmeyenleri anında bul — Letterboxd için</p>
-  </div>
-  <div class="header-stat">
-    sen: 🫶 takip<br>
-    onlar: 👀 izliyor ama<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;takip etmiyor<br>
-    ━━━━━━━━━━━━<br>
-    klasik letterboxd haini
-  </div>
-</header>
-
-<main>
-
-  <!-- SEARCH -->
-  <div class="search-block">
-    <div class="search-eyebrow">Letterboxd kullanıcı adı</div>
-    <div class="search-box">
-      <div class="search-at">LB/</div>
-      <input
-        id="userInput"
-        class="search-input"
-        type="text"
-        placeholder="kullaniciadi"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button class="search-btn" id="searchBtn" onclick="analyze()">ANALIZ ET</button>
+  <header>
+    <div class="logo-area">
+      <h1>HAİN<em>KİM?</em></h1>
+      <p>Seni takip etmeyenleri anında bul — Letterboxd için</p>
     </div>
-  </div>
-
-  <!-- ERROR -->
-  <div class="error-msg" id="errorMsg"></div>
-
-  <!-- LOADER -->
-  <div class="loader" id="loader">
-    <div class="film-roll">
-      <div class="film-frame"></div>
-      <div class="film-frame"></div>
-      <div class="film-frame"></div>
-      <div class="film-frame"></div>
-      <div class="film-frame"></div>
-      <div class="film-frame"></div>
+    <div class="header-stat">
+      sen: 🫶 takip<br>
+      onlar: 👀 izliyor ama<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;takip etmiyor<br>
+      ━━━━━━━━━━━━<br>
+      klasik letterboxd haini
     </div>
-    <div class="loader-text" id="loaderText">Takip listeleri yükleniyor...</div>
-    <div class="loader-sub" id="loaderSub">letterboxd.com taranıyor</div>
-  </div>
+  </header>
 
-  <!-- PROFILE CARD -->
-  <div class="profile-card" id="profileCard">
-    <div class="profile-avatar" id="profileAvatar">?</div>
-    <div class="profile-info">
-      <div class="profile-name" id="profileName">—</div>
-      <div class="profile-handle" id="profileHandle">—</div>
-    </div>
-    <div class="profile-stats">
-      <div>
-        <span class="pstat-num" id="psFollowing">—</span>
-        <span class="pstat-label">Takip</span>
-      </div>
-      <div>
-        <span class="pstat-num" id="psFollowers">—</span>
-        <span class="pstat-label">Takipçi</span>
-      </div>
-      <div>
-        <span class="pstat-num" id="psFilms">—</span>
-        <span class="pstat-label">Film</span>
+  <main>
+
+    <!-- SEARCH -->
+    <div class="search-block">
+      <div class="search-eyebrow">Letterboxd kullanıcı adı</div>
+      <div class="search-box">
+        <div class="search-at">LB/</div>
+        <input id="userInput" class="search-input" type="text" placeholder="kullaniciadi" autocomplete="off"
+          spellcheck="false" />
+        <button class="search-btn" id="searchBtn" onclick="analyze()">ANALIZ ET</button>
       </div>
     </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+      <div class="film-roll">
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+        <div class="film-frame"></div>
+      </div>
+      <div class="loader-text" id="loaderText">Takip listeleri yükleniyor...</div>
+      <div class="loader-sub" id="loaderSub">letterboxd.com taranıyor</div>
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card" id="profileCard">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-handle" id="profileHandle">—</div>
+      </div>
+      <div class="profile-stats">
+        <div>
+          <span class="pstat-num" id="psFollowing">—</span>
+          <span class="pstat-label">Takip</span>
+        </div>
+        <div>
+          <span class="pstat-num" id="psFollowers">—</span>
+          <span class="pstat-label">Takipçi</span>
+        </div>
+        <div>
+          <span class="pstat-num" id="psFilms">—</span>
+          <span class="pstat-label">Film</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY STRIP -->
+    <div class="summary-strip" id="summaryStrip">
+      <div class="summary-cell">
+        <span class="summary-num num-red" id="sumNoback">0</span>
+        <div class="summary-label">Geri Takip Etmeyenler</div>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-num num-green" id="sumMutual">0</span>
+        <div class="summary-label">Karşılıklı Takip</div>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-num num-gold" id="sumNotFollowing">0</span>
+        <div class="summary-label">Seni Takip Eden (Sen Etmiyorsun)</div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+      <div class="results-header">
+        <div class="results-title" id="resultsTitle">GERİ TAKİP <span>ETMEYENLERr</span></div>
+        <div class="results-meta" id="resultsMeta">0 kişi</div>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('noback', this)">
+          ✕ Geri takip etmeyenler
+        </button>
+        <button class="filter-btn" onclick="setFilter('mutual', this)">
+          ✓ Karşılıklı takip
+        </button>
+        <button class="filter-btn" onclick="setFilter('notfollowing', this)">
+          → Seni takip eden (sen etmiyorsun)
+        </button>
+        <button class="filter-btn" onclick="setFilter('all', this)">
+          Tümü
+        </button>
+      </div>
+
+      <div class="user-list" id="userList"></div>
+      <div class="empty" id="emptyState">
+        <div class="empty-title">HERKES KARŞILIKLI TAKİP EDİYOR</div>
+        <div class="empty-text">Harika, hiç karşılıksız takip yok bu kategoride.</div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footer-logo">HAİNKİM?</div>
+    <div class="footer-note">
+      Bu araç Letterboxd ile resmi bir bağlantıya sahip değildir.
+      Veriler herkese açık profil sayfalarından alınmaktadır.
+      Letterboxd'un hizmet koşullarına saygı gösteriniz.
+    </div>
+  </footer>
+
+  <div class="credit-bar">
+    <a href="https://letterboxd.com/kyuzelost" target="_blank" class="credit-tag">@kyuzelost</a>
   </div>
 
-  <!-- SUMMARY STRIP -->
-  <div class="summary-strip" id="summaryStrip">
-    <div class="summary-cell">
-      <span class="summary-num num-red" id="sumNoback">0</span>
-      <div class="summary-label">Geri Takip Etmeyenler</div>
-    </div>
-    <div class="summary-cell">
-      <span class="summary-num num-green" id="sumMutual">0</span>
-      <div class="summary-label">Karşılıklı Takip</div>
-    </div>
-    <div class="summary-cell">
-      <span class="summary-num num-gold" id="sumNotFollowing">0</span>
-      <div class="summary-label">Seni Takip Eden (Sen Etmiyorsun)</div>
-    </div>
-  </div>
+  <div class="filmstrip-bottom"></div>
 
-  <!-- RESULTS -->
-  <div class="results" id="results">
-    <div class="results-header">
-      <div class="results-title" id="resultsTitle">GERİ TAKİP <span>ETMEYENLERr</span></div>
-      <div class="results-meta" id="resultsMeta">0 kişi</div>
-    </div>
+  <script>
+    // ── DATA ─────────────────────────────────────────────────────────────
+    let allData = { following: [], followers: [], username: '' };
+    let currentFilter = 'noback';
 
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="setFilter('noback', this)">
-        ✕ Geri takip etmeyenler
-      </button>
-      <button class="filter-btn" onclick="setFilter('mutual', this)">
-        ✓ Karşılıklı takip
-      </button>
-      <button class="filter-btn" onclick="setFilter('notfollowing', this)">
-        → Seni takip eden (sen etmiyorsun)
-      </button>
-      <button class="filter-btn" onclick="setFilter('all', this)">
-        Tümü
-      </button>
-    </div>
+    // ── REAL API ─────────────────────────────────────────────────────────
+    async function realFetch(username) {
+      const steps = [
+        { text: `letterboxd.com/${username} açılıyor...`, sub: 'bağlantı kuruluyor' },
+        { text: 'Takip edilen listesi alınıyor...', sub: `/${username}/following/` },
+        { text: 'Takipçi listesi alınıyor...', sub: `/${username}/followers/` },
+        { text: 'Karşılaştırılıyor...', sub: 'analiz tamamlanıyor' },
+      ];
 
-    <div class="user-list" id="userList"></div>
-    <div class="empty" id="emptyState">
-      <div class="empty-title">HERKES KARŞILIKLI TAKİP EDİYOR</div>
-      <div class="empty-text">Harika, hiç karşılıksız takip yok bu kategoride.</div>
-    </div>
-  </div>
+      let step = 0;
+      const interval = setInterval(() => {
+        if (step < steps.length) {
+          document.getElementById('loaderText').textContent = steps[step].text;
+          document.getElementById('loaderSub').textContent = steps[step].sub;
+          step++;
+        }
+      }, 800);
 
-</main>
+      try {
+        const res = await fetch(`/api/letterboxd?username=${encodeURIComponent(username)}`);
+        clearInterval(interval);
 
-<footer>
-  <div class="footer-logo">HAİNKİM?</div>
-  <div class="footer-note">
-    Bu araç Letterboxd ile resmi bir bağlantıya sahip değildir.
-    Veriler herkese açık profil sayfalarından alınmaktadır.
-    Letterboxd'un hizmet koşullarına saygı gösteriniz.
-  </div>
-</footer>
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Sunucu hatası' }));
+          throw new Error(err.error || `HTTP ${res.status}`);
+        }
 
-<div class="credit-bar">
-  <a href="https://letterboxd.com/kyuzelost" target="_blank" class="credit-tag">@kyuzelost</a>
-</div>
+        const data = await res.json();
 
-<div class="filmstrip-bottom"></div>
-
-<script>
-// ── DATA ─────────────────────────────────────────────────────────────
-let allData = { following: [], followers: [], username: '' };
-let currentFilter = 'noback';
-
-// ── REAL API ─────────────────────────────────────────────────────────
-async function realFetch(username) {
-  const steps = [
-    { text: `letterboxd.com/${username} açılıyor...`, sub: 'bağlantı kuruluyor' },
-    { text: 'Takip edilen listesi alınıyor...', sub: `/${username}/following/` },
-    { text: 'Takipçi listesi alınıyor...', sub: `/${username}/followers/` },
-    { text: 'Karşılaştırılıyor...', sub: 'analiz tamamlanıyor' },
-  ];
-
-  let step = 0;
-  const interval = setInterval(() => {
-    if (step < steps.length) {
-      document.getElementById('loaderText').textContent = steps[step].text;
-      document.getElementById('loaderSub').textContent = steps[step].sub;
-      step++;
-    }
-  }, 800);
-
-  try {
-    const res = await fetch(`/api/letterboxd?username=${encodeURIComponent(username)}`);
-    clearInterval(interval);
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: 'Sunucu hatası' }));
-      throw new Error(err.error || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-
-    // API already computes the splits — pass them through directly
-    return data;
-  } catch (e) {
-    clearInterval(interval);
-    throw e;
-  }
-}
-
-// ── ANALYZE ───────────────────────────────────────────────────────────
-async function analyze() {
-  const username = document.getElementById('userInput').value.trim().toLowerCase();
-  if (!username) { document.getElementById('userInput').focus(); return; }
-
-  // Reset
-  hideAll();
-  document.getElementById('errorMsg').classList.remove('visible');
-  document.getElementById('loader').classList.add('visible');
-  document.getElementById('searchBtn').disabled = true;
-
-  try {
-    const data = await realFetch(username);
-
-    // API returns pre-computed splits
-    allData.username = username;
-    allData.following = [...data.notFollowingBack, ...data.mutual];
-    allData.followers = [...data.mutual, ...data.notFollowing];
-    allData.notFollowingBack = data.notFollowingBack;
-    allData.mutual = data.mutual;
-    allData.notFollowing = data.notFollowing;
-
-    document.getElementById('loader').classList.remove('visible');
-    showProfile(data);
-    showSummary();
-    setFilter(currentFilter, document.querySelector('.filter-btn.active'));
-    document.getElementById('results').classList.add('visible');
-
-  } catch (err) {
-    document.getElementById('loader').classList.remove('visible');
-    const e = document.getElementById('errorMsg');
-    e.textContent = `⚠ ${err.message || err} — Kullanıcı bulunamadı veya profil gizli olabilir.`;
-    e.classList.add('visible');
-  }
-
-  document.getElementById('searchBtn').disabled = false;
-}
-
-// ── PROFILE ───────────────────────────────────────────────────────────
-function showProfile(data) {
-  document.getElementById('profileAvatar').textContent = (data.displayName || data.username)[0].toUpperCase();
-  document.getElementById('profileName').textContent = data.displayName || data.username;
-  document.getElementById('profileHandle').textContent = `letterboxd.com/${data.username}`;
-  document.getElementById('psFollowing').textContent = (data.followingCount ?? allData.following.length).toLocaleString('tr-TR');
-  document.getElementById('psFollowers').textContent = (data.followersCount ?? allData.followers.length).toLocaleString('tr-TR');
-  document.getElementById('psFilms').textContent = isNaN(data.films) ? (data.films || '?') : Number(String(data.films).replace(/,/g,'')).toLocaleString('tr-TR');
-  document.getElementById('profileCard').classList.add('visible');
-}
-
-// ── SUMMARY ───────────────────────────────────────────────────────────
-function showSummary() {
-  document.getElementById('sumNoback').textContent = (allData.notFollowingBack || []).length;
-  document.getElementById('sumMutual').textContent = (allData.mutual || []).length;
-  document.getElementById('sumNotFollowing').textContent = (allData.notFollowing || []).length;
-  document.getElementById('summaryStrip').classList.add('visible');
-}
-
-// ── FILTER ────────────────────────────────────────────────────────────
-function setFilter(type, el) {
-  currentFilter = type;
-
-  // Update buttons
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
-
-  let list, title, tagClass, tagText;
-
-  if (type === 'noback') {
-    list = allData.notFollowingBack || [];
-    title = `GERİ TAKİP <span>ETMEYENLERr</span>`;
-    tagClass = 'tag-noback'; tagText = 'TAKİP ETMİYOR';
-  } else if (type === 'mutual') {
-    list = allData.mutual || [];
-    title = `KARŞILIKLI <span>TAKİP</span>`;
-    tagClass = 'tag-mutual'; tagText = 'KARŞILIKLI';
-  } else if (type === 'notfollowing') {
-    list = allData.notFollowing || [];
-    title = `SENİ TAKİP EDEN <span>(SEN ETMİYORSUN)</span>`;
-    tagClass = 'tag-notfollowing'; tagText = 'TAKİP ET?';
-  } else {
-    const mutualSet = new Set((allData.mutual || []).map(f => f.username));
-    list = [...(allData.notFollowingBack || []), ...(allData.mutual || [])].map(f => ({
-      ...f,
-      _status: mutualSet.has(f.username) ? 'mutual' : 'noback'
-    }));
-    title = `TÜM <span>TAKİP LİSTESİ</span>`;
-    tagClass = null;
-  }
-
-  document.getElementById('resultsTitle').innerHTML = title;
-  document.getElementById('resultsMeta').textContent = `${list.length} kişi`;
-
-  renderList(list, tagClass, tagText, type === 'all');
-}
-
-// ── RENDER LIST ───────────────────────────────────────────────────────
-function renderList(list, tagClass, tagText, mixed) {
-  const ul = document.getElementById('userList');
-  const empty = document.getElementById('emptyState');
-  ul.innerHTML = '';
-
-  if (list.length === 0) {
-    empty.classList.add('visible');
-    return;
-  }
-
-  empty.classList.remove('visible');
-
-  list.forEach((user, i) => {
-    const row = document.createElement('div');
-    row.className = 'user-row';
-    row.style.animationDelay = `${Math.min(i * 30, 400)}ms`;
-
-    let tc = tagClass, tt = tagText;
-    if (mixed) {
-      tc = user._status === 'mutual' ? 'tag-mutual' : 'tag-noback';
-      tt = user._status === 'mutual' ? 'KARŞILIKLI' : 'TAKİP ETMİYOR';
+        // API already computes the splits — pass them through directly
+        return data;
+      } catch (e) {
+        clearInterval(interval);
+        throw e;
+      }
     }
 
-    row.innerHTML = `
+    // ── ANALYZE ───────────────────────────────────────────────────────────
+    async function analyze() {
+      const username = document.getElementById('userInput').value.trim().toLowerCase();
+      if (!username) { document.getElementById('userInput').focus(); return; }
+
+      // Reset
+      hideAll();
+      document.getElementById('errorMsg').classList.remove('visible');
+      document.getElementById('loader').classList.add('visible');
+      document.getElementById('searchBtn').disabled = true;
+
+      try {
+        const data = await realFetch(username);
+
+        // API returns pre-computed splits
+        allData.username = username;
+        allData.following = [...data.notFollowingBack, ...data.mutual];
+        allData.followers = [...data.mutual, ...data.notFollowing];
+        allData.notFollowingBack = data.notFollowingBack;
+        allData.mutual = data.mutual;
+        allData.notFollowing = data.notFollowing;
+
+        document.getElementById('loader').classList.remove('visible');
+        showProfile(data);
+        showSummary();
+        setFilter(currentFilter, document.querySelector('.filter-btn.active'));
+        document.getElementById('results').classList.add('visible');
+
+      } catch (err) {
+        document.getElementById('loader').classList.remove('visible');
+        const e = document.getElementById('errorMsg');
+        e.textContent = `⚠ ${err.message || err} — Kullanıcı bulunamadı veya profil gizli olabilir.`;
+        e.classList.add('visible');
+      }
+
+      document.getElementById('searchBtn').disabled = false;
+    }
+
+    // ── PROFILE ───────────────────────────────────────────────────────────
+    function showProfile(data) {
+      document.getElementById('profileAvatar').textContent = (data.displayName || data.username)[0].toUpperCase();
+      document.getElementById('profileName').textContent = data.displayName || data.username;
+      document.getElementById('profileHandle').textContent = `letterboxd.com/${data.username}`;
+      document.getElementById('psFollowing').textContent = (data.followingCount ?? allData.following.length).toLocaleString('tr-TR');
+      document.getElementById('psFollowers').textContent = (data.followersCount ?? allData.followers.length).toLocaleString('tr-TR');
+      document.getElementById('psFilms').textContent = isNaN(data.films) ? (data.films || '?') : Number(String(data.films).replace(/,/g, '')).toLocaleString('tr-TR');
+      document.getElementById('profileCard').classList.add('visible');
+    }
+
+    // ── SUMMARY ───────────────────────────────────────────────────────────
+    function showSummary() {
+      document.getElementById('sumNoback').textContent = (allData.notFollowingBack || []).length;
+      document.getElementById('sumMutual').textContent = (allData.mutual || []).length;
+      document.getElementById('sumNotFollowing').textContent = (allData.notFollowing || []).length;
+      document.getElementById('summaryStrip').classList.add('visible');
+    }
+
+    // ── FILTER ────────────────────────────────────────────────────────────
+    function setFilter(type, el) {
+      currentFilter = type;
+
+      // Update buttons
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      let list, title, tagClass, tagText;
+
+      if (type === 'noback') {
+        list = allData.notFollowingBack || [];
+        title = `GERİ TAKİP <span>ETMEYENLERr</span>`;
+        tagClass = 'tag-noback'; tagText = 'TAKİP ETMİYOR';
+      } else if (type === 'mutual') {
+        list = allData.mutual || [];
+        title = `KARŞILIKLI <span>TAKİP</span>`;
+        tagClass = 'tag-mutual'; tagText = 'KARŞILIKLI';
+      } else if (type === 'notfollowing') {
+        list = allData.notFollowing || [];
+        title = `SENİ TAKİP EDEN <span>(SEN ETMİYORSUN)</span>`;
+        tagClass = 'tag-notfollowing'; tagText = 'TAKİP ET?';
+      } else {
+        const mutualSet = new Set((allData.mutual || []).map(f => f.username));
+        list = [...(allData.notFollowingBack || []), ...(allData.mutual || [])].map(f => ({
+          ...f,
+          _status: mutualSet.has(f.username) ? 'mutual' : 'noback'
+        }));
+        title = `TÜM <span>TAKİP LİSTESİ</span>`;
+        tagClass = null;
+      }
+
+      document.getElementById('resultsTitle').innerHTML = title;
+      document.getElementById('resultsMeta').textContent = `${list.length} kişi`;
+
+      renderList(list, tagClass, tagText, type === 'all');
+    }
+
+    // ── RENDER LIST ───────────────────────────────────────────────────────
+    function renderList(list, tagClass, tagText, mixed) {
+      const ul = document.getElementById('userList');
+      const empty = document.getElementById('emptyState');
+      ul.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.classList.add('visible');
+        return;
+      }
+
+      empty.classList.remove('visible');
+
+      list.forEach((user, i) => {
+        const row = document.createElement('div');
+        row.className = 'user-row';
+        row.style.animationDelay = `${Math.min(i * 30, 400)}ms`;
+
+        let tc = tagClass, tt = tagText;
+        if (mixed) {
+          tc = user._status === 'mutual' ? 'tag-mutual' : 'tag-noback';
+          tt = user._status === 'mutual' ? 'KARŞILIKLI' : 'TAKİP ETMİYOR';
+        }
+
+        row.innerHTML = `
       <div class="row-num">${i + 1}</div>
       <div class="row-avatar">${(user.displayName || user.username)[0].toUpperCase()}</div>
       <div class="row-info">
@@ -963,24 +1097,26 @@ function renderList(list, tagClass, tagText, mixed) {
         <div class="row-handle">@${user.username}</div>
       </div>
       ${tc ? `<div class="row-tag ${tc}">${tt}</div>` : ''}
+      <a class="row-unfollow" href="https://letterboxd.com/${user.username}" target="_blank" title="Letterboxd profilini aç">TAKİPTEN ÇIK</a>
       <a class="row-link" href="https://letterboxd.com/${user.username}" target="_blank" title="Letterboxd'da aç">↗</a>
     `;
 
-    ul.appendChild(row);
-  });
-}
+        ul.appendChild(row);
+      });
+    }
 
-function hideAll() {
-  document.getElementById('profileCard').classList.remove('visible');
-  document.getElementById('summaryStrip').classList.remove('visible');
-  document.getElementById('results').classList.remove('visible');
-  document.getElementById('emptyState').classList.remove('visible');
-}
+    function hideAll() {
+      document.getElementById('profileCard').classList.remove('visible');
+      document.getElementById('summaryStrip').classList.remove('visible');
+      document.getElementById('results').classList.remove('visible');
+      document.getElementById('emptyState').classList.remove('visible');
+    }
 
-// Enter key
-document.getElementById('userInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') analyze();
-});
-</script>
+    // Enter key
+    document.getElementById('userInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') analyze();
+    });
+  </script>
 </body>
+
 </html>
