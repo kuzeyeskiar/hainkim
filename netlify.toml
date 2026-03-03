@@ -4,6 +4,10 @@
 
 [functions]
   node_bundler = "zisi"
+  external_node_modules = ["cheerio"]
+
+[functions."letterboxd"]
+  timeout = 26
 
 [[redirects]]
   from = "/api/*"
