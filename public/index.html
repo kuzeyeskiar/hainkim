@@ -112,37 +112,28 @@
 
     /* ── HEADER ── */
     header {
-      padding: 56px 64px 48px;
+      padding: 48px 64px 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: relative;
-      overflow: hidden;
+      border-bottom: 1px solid var(--border);
     }
 
-    header::before {
-      content: 'HAİNKİM?';
-      position: absolute;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 220px;
-      background: linear-gradient(90deg, rgba(255, 143, 31, 0.04), rgba(64, 188, 180, 0.03));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      bottom: -30px;
-      left: -8px;
-      pointer-events: none;
-      line-height: 1;
-      user-select: none;
+    .logo-area {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .logo-area h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 72px;
-      letter-spacing: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 6px;
       color: #fff;
       line-height: 1;
-      margin-bottom: 8px;
+      text-transform: uppercase;
     }
 
     .logo-area h1 em {
@@ -151,11 +142,11 @@
     }
 
     .logo-area p {
-      font-family: 'Lora', serif;
-      font-style: italic;
-      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
       color: var(--muted);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      font-weight: 300;
     }
 
     .header-tag {
