@@ -1,69 +1,81 @@
-const https = require("https");
+const http2 = require("http2");
 const cheerio = require("cheerio");
 
-// Multiple proxy options for reliability
-const PROXIES = [
-    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-];
-
-function fetchRaw(url) {
+function fetchPage(url) {
     return new Promise((resolve, reject) => {
-        const req = https.get(url, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            },
-            timeout: 12000,
-        }, (res) => {
-            if (res.statusCode === 301 || res.statusCode === 302) {
-                const loc = res.headers.location;
-                if (loc) return fetchRaw(loc).then(resolve).catch(reject);
-            }
-            let data = "";
-            res.on("data", (c) => (data += c));
-            res.on("end", () => resolve({ status: res.statusCode, body: data }));
+        const parsed = new URL(url);
+        const client = http2.connect(`https://${parsed.host}`);
+
+        client.on("error", (err) => {
+            client.close();
+            reject(err);
         });
-        req.on("error", reject);
-        req.on("timeout", () => { req.destroy(); reject(new Error("Timeout")); });
+
+        const headers = {
+            ":method": "GET",
+            ":path": parsed.pathname + parsed.search,
+            ":authority": parsed.host,
+            ":scheme": "https",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "en-US,en;q=0.9",
+            "accept-encoding": "identity",
+            "cache-control": "max-age=0",
+            "sec-ch-ua": '"Chromium";v="131", "Not_A Brand";v="24"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+        };
+
+        const req = client.request(headers);
+        req.setEncoding("utf8");
+
+        let status = 0;
+        let data = "";
+        let location = "";
+
+        req.on("response", (resHeaders) => {
+            status = resHeaders[":status"];
+            location = resHeaders["location"] || "";
+        });
+
+        req.on("data", (chunk) => { data += chunk; });
+
+        req.on("end", () => {
+            client.close();
+
+            if ((status === 301 || status === 302) && location) {
+                // Handle relative URLs
+                const redirectUrl = location.startsWith("http")
+                    ? location
+                    : `https://${parsed.host}${location}`;
+                return fetchPage(redirectUrl).then(resolve).catch(reject);
+            }
+
+            if (status === 404) return reject(new Error("Kullanici bulunamadi"));
+            if (status === 403) return reject(new Error("HTTP 403"));
+            if (status !== 200) return reject(new Error("HTTP " + status));
+
+            resolve(data);
+        });
+
+        req.on("error", (err) => {
+            client.close();
+            reject(err);
+        });
+
+        req.setTimeout(15000, () => {
+            req.close();
+            client.close();
+            reject(new Error("Timeout"));
+        });
+
+        req.end();
     });
-}
-
-async function fetchPage(targetUrl) {
-    // Try each proxy
-    for (const makeProxy of PROXIES) {
-        try {
-            const proxyUrl = makeProxy(targetUrl);
-            const { status, body } = await fetchRaw(proxyUrl);
-
-            // Check if we got Cloudflare challenge or error
-            if (body.includes("Just a moment") || body.includes("cf-browser-verification")) {
-                continue; // Try next proxy
-            }
-
-            if (status === 404 || body.includes("Page Not Found")) {
-                throw new Error("Kullanici bulunamadi");
-            }
-
-            if (status >= 200 && status < 300 && body.length > 500) {
-                return body;
-            }
-        } catch (err) {
-            if (err.message.includes("bulunamadi")) throw err;
-            // Try next proxy
-            continue;
-        }
-    }
-
-    // Last resort: direct fetch (might work for profile pages)
-    try {
-        const { status, body } = await fetchRaw(targetUrl);
-        if (status === 404) throw new Error("Kullanici bulunamadi");
-        if (status === 200 && body.length > 500) return body;
-        throw new Error("HTTP " + status);
-    } catch (err) {
-        throw err;
-    }
 }
 
 function parseUserList(html) {
@@ -75,7 +87,6 @@ function parseUserList(html) {
         "following", "followers", "search", "settings", "about",
     ]);
 
-    // Primary: table-person cells
     $("td.table-person").each((_, td) => {
         const $nameLink = $(td).find("a.name");
         if ($nameLink.length) {
@@ -89,7 +100,6 @@ function parseUserList(html) {
         }
     });
 
-    // Fallback
     if (users.length === 0) {
         $("a.avatar, .person-summary a[href]").each((_, a) => {
             const href = $(a).attr("href") || "";
@@ -160,11 +170,9 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Verify user exists
         const profileHtml = await fetchPage("https://letterboxd.com/" + username + "/");
         const profile = parseProfile(profileHtml, username);
 
-        // Fetch following and followers in parallel
         const [following, followers] = await Promise.all([
             fetchAllPages(username, "following"),
             fetchAllPages(username, "followers"),
