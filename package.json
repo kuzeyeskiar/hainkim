@@ -2,10 +2,8 @@
   "name": "hainkim",
   "version": "1.0.0",
   "description": "Letterboxd - Seni takip etmeyenleri bul",
-  "scripts": {
-    "dev": "netlify dev"
-  },
-  "devDependencies": {
-    "netlify-cli": "^17.0.0"
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12"
   }
 }
