@@ -116,7 +116,7 @@ function parseUserList(html) {
 
 async function fetchAllPages(username, type) {
     const allUsers = [];
-    for (let page = 1; page <= 15; page++) {
+    for (let page = 1; page <= 200; page++) {
         const url = `https://letterboxd.com/${username}/${type}/page/${page}/`;
         try {
             const html = await fetchPage(url);
@@ -128,7 +128,7 @@ async function fetchAllPages(username, type) {
             const hasNext = $('a.next, .paginate-next, [rel="next"]').length > 0;
             if (!hasNext) break;
 
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 100));
         } catch (err) {
             if (page === 1) throw err;
             break;
