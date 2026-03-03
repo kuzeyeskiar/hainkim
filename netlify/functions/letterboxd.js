@@ -1,16 +1,9 @@
 const http2 = require("http2");
 const cheerio = require("cheerio");
 
-function fetchPage(url) {
+function fetchPage(client, url) {
     return new Promise((resolve, reject) => {
         const parsed = new URL(url);
-        const client = http2.connect(`https://${parsed.host}`);
-
-        client.on("error", (err) => {
-            client.close();
-            reject(err);
-        });
-
         const headers = {
             ":method": "GET",
             ":path": parsed.pathname + parsed.search,
@@ -46,14 +39,11 @@ function fetchPage(url) {
         req.on("data", (chunk) => { data += chunk; });
 
         req.on("end", () => {
-            client.close();
-
             if ((status === 301 || status === 302) && location) {
-                // Handle relative URLs
                 const redirectUrl = location.startsWith("http")
                     ? location
                     : `https://${parsed.host}${location}`;
-                return fetchPage(redirectUrl).then(resolve).catch(reject);
+                return fetchPage(client, redirectUrl).then(resolve).catch(reject);
             }
 
             if (status === 404) return reject(new Error("Kullanici bulunamadi"));
@@ -64,13 +54,11 @@ function fetchPage(url) {
         });
 
         req.on("error", (err) => {
-            client.close();
             reject(err);
         });
 
         req.setTimeout(15000, () => {
             req.close();
-            client.close();
             reject(new Error("Timeout"));
         });
 
@@ -114,12 +102,12 @@ function parseUserList(html) {
     return users;
 }
 
-async function fetchAllPages(username, type) {
+async function fetchAllPages(client, username, type) {
     const allUsers = [];
     for (let page = 1; page <= 200; page++) {
         const url = `https://letterboxd.com/${username}/${type}/page/${page}/`;
         try {
-            const html = await fetchPage(url);
+            const html = await fetchPage(client, url);
             const users = parseUserList(html);
             if (users.length === 0) break;
             allUsers.push(...users);
@@ -127,8 +115,6 @@ async function fetchAllPages(username, type) {
             const $ = cheerio.load(html);
             const hasNext = $('a.next, .paginate-next, [rel="next"]').length > 0;
             if (!hasNext) break;
-
-            await new Promise((r) => setTimeout(r, 100));
         } catch (err) {
             if (page === 1) throw err;
             break;
@@ -170,13 +156,26 @@ exports.handler = async (event) => {
     }
 
     try {
-        const profileHtml = await fetchPage("https://letterboxd.com/" + username + "/");
+        const client = http2.connect("https://letterboxd.com");
+        client.on("error", (err) => {
+            console.error("HTTP/2 Client Error:", err);
+        });
+
+        // Add a safety timeout to close the client if everything hangs
+        const maxTimeout = setTimeout(() => {
+            if (!client.closed) client.close();
+        }, 24000); // 24 seconds (Netlify limit is 26s)
+
+        const profileHtml = await fetchPage(client, "https://letterboxd.com/" + username + "/");
         const profile = parseProfile(profileHtml, username);
 
         const [following, followers] = await Promise.all([
-            fetchAllPages(username, "following"),
-            fetchAllPages(username, "followers"),
+            fetchAllPages(client, username, "following"),
+            fetchAllPages(client, username, "followers"),
         ]);
+
+        clearTimeout(maxTimeout);
+        if (!client.closed) client.close();
 
         const followerSet = new Set(followers.map((f) => f.username));
         const followingSet = new Set(following.map((f) => f.username));
