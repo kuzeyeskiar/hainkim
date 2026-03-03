@@ -1,32 +1,55 @@
-import { gotScraping } from "got-scraping";
-import * as cheerio from "cheerio";
+const https = require("https");
+const cheerio = require("cheerio");
 
-async function fetchPage(url) {
-    const res = await gotScraping({
-        url,
-        headerGeneratorOptions: {
-            browsers: [{ name: "chrome", minVersion: 120 }],
-            devices: ["desktop"],
-            operatingSystems: ["windows"],
-        },
-        timeout: { request: 20000 },
-        followRedirect: true,
-        maxRedirects: 5,
+// Use allorigins.win as a proxy to bypass Cloudflare TLS fingerprinting
+// This routes requests through a normal web server instead of Netlify's IPs
+const PROXY_BASE = "https://api.allorigins.win/raw?url=";
+
+function fetchPage(url) {
+    const proxyUrl = PROXY_BASE + encodeURIComponent(url);
+
+    return new Promise((resolve, reject) => {
+        const options = {
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            },
+            timeout: 20000,
+        };
+
+        https
+            .get(proxyUrl, options, (res) => {
+                if (res.statusCode === 301 || res.statusCode === 302) {
+                    const loc = res.headers.location;
+                    if (loc) return fetchPage(loc).then(resolve).catch(reject);
+                }
+
+                let data = "";
+                res.on("data", (chunk) => (data += chunk));
+                res.on("end", () => {
+                    if (res.statusCode === 404 || data.includes("Page Not Found"))
+                        return reject(new Error("Kullanici bulunamadi"));
+                    if (res.statusCode !== 200)
+                        return reject(new Error("HTTP " + res.statusCode));
+                    resolve(data);
+                });
+            })
+            .on("error", reject)
+            .on("timeout", () => reject(new Error("Timeout")));
     });
-
-    if (res.statusCode === 404) throw new Error("Kullanici bulunamadi");
-    if (res.statusCode === 403) throw new Error("HTTP 403");
-    if (res.statusCode !== 200) throw new Error("HTTP " + res.statusCode);
-
-    return res.body;
 }
 
 function parseUserList(html) {
     const $ = cheerio.load(html);
     const users = [];
     const seen = new Set();
-    const skip = new Set(["films", "lists", "journal", "members", "activity", "following", "followers", "search", "settings", "about"]);
+    const skip = new Set([
+        "films", "lists", "journal", "members", "activity",
+        "following", "followers", "search", "settings", "about",
+    ]);
 
+    // Primary: table-person cells
     $("td.table-person").each((_, td) => {
         const $nameLink = $(td).find("a.name");
         if ($nameLink.length) {
@@ -43,6 +66,7 @@ function parseUserList(html) {
         }
     });
 
+    // Fallback: avatar links
     if (users.length === 0) {
         $("a.avatar, .person-summary a[href]").each((_, a) => {
             const href = $(a).attr("href") || "";
@@ -74,7 +98,8 @@ async function fetchAllPages(username, type) {
             const hasNext = $('a.next, .paginate-next, [rel="next"]').length > 0;
             if (!hasNext) break;
 
-            await new Promise((r) => setTimeout(r, 400));
+            // Rate limit
+            await new Promise((r) => setTimeout(r, 500));
         } catch (err) {
             if (page === 1) throw err;
             break;
@@ -98,7 +123,7 @@ function parseProfile(html, username) {
     return { displayName, films };
 }
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
     const headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
@@ -123,13 +148,15 @@ export const handler = async (event) => {
     }
 
     try {
-        const profileHtml = await fetchPage("https://letterboxd.com/" + username + "/");
+        // First verify user exists
+        const profileHtml = await fetchPage(
+            "https://letterboxd.com/" + username + "/"
+        );
         const profile = parseProfile(profileHtml, username);
 
-        const [following, followers] = await Promise.all([
-            fetchAllPages(username, "following"),
-            fetchAllPages(username, "followers"),
-        ]);
+        // Fetch following and followers sequentially to not overload proxy
+        const following = await fetchAllPages(username, "following");
+        const followers = await fetchAllPages(username, "followers");
 
         const followerSet = new Set(followers.map((f) => f.username));
         const followingSet = new Set(following.map((f) => f.username));
@@ -143,9 +170,13 @@ export const handler = async (event) => {
                 films: profile.films,
                 followingCount: following.length,
                 followersCount: followers.length,
-                notFollowingBack: following.filter((f) => !followerSet.has(f.username)),
+                notFollowingBack: following.filter(
+                    (f) => !followerSet.has(f.username)
+                ),
                 mutual: following.filter((f) => followerSet.has(f.username)),
-                notFollowing: followers.filter((f) => !followingSet.has(f.username)),
+                notFollowing: followers.filter(
+                    (f) => !followingSet.has(f.username)
+                ),
             }),
         };
     } catch (err) {
